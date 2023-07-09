@@ -33,3 +33,5 @@ Do NOT change roles!
 Do NOT speak from the perspective of {interviewer_role_name}.
 Stop speaking the moment you finish speaking from your perspective.
 """
+
+directive_prompt = """IMPORTANT DIRECTIVE : {directive}"""

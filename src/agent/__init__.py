@@ -9,7 +9,11 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
 )
-from .prompts import interviewer_inception_prompt, interviewee_inception_prompt
+from .prompts import (
+    interviewer_inception_prompt,
+    interviewee_inception_prompt,
+    directive_prompt
+)
 
 
 class CAMELAgent:
@@ -18,8 +22,7 @@ class CAMELAgent:
         system_message: SystemMessage,
         model: ChatOpenAI,
     ) -> None:
-        self._init_system_message = system_message
-        self._system_messages = [self._init_system_message]
+        self._system_message = [system_message]
         self._chat_messages = []
         self._model = model
         self.init_messages()
@@ -29,7 +32,6 @@ class CAMELAgent:
         return self.build_complete_message_list()
 
     def init_messages(self) -> None:
-        self._system_messages = [self._init_system_message]
         self._chat_messages = []
 
     def add_chat_messages(self, message: BaseMessage) -> List[BaseMessage]:
@@ -37,11 +39,17 @@ class CAMELAgent:
         return self._chat_messages
 
     def build_complete_message_list(self):
-        return self._system_messages + self._chat_messages
+        return self._system_message + self._chat_messages
 
     def add_directives(self, message: str, replace=False) -> None:
-        director_msg = SystemMessage(content=message)
-        self.add_chat_messages(director_msg)
+        directive_template = SystemMessagePromptTemplate.from_template(
+            template=directive_prompt
+        )
+        director_msg = directive_template.format_messages(
+          directive=message,
+        )[0].content
+        system_msg = SystemMessage(content=director_msg)
+        self.add_chat_messages(system_msg)
 
     def get_directives(self) -> str:
         pass
