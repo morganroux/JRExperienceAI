@@ -1,0 +1,8 @@
+GDAL==3.6.4
+libusb1==3.0.0
+ndeflib==0.3.3
+numpy==1.24.3
+protobuf==4.21.12
+pyDes==2.0.1
+pyserial==3.5
+six==1.16.0
