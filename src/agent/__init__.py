@@ -8,7 +8,6 @@ from langchain.schema import (
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
 )
 from .prompts import interviewer_inception_prompt, interviewee_inception_prompt
 
@@ -19,26 +18,30 @@ class CAMELAgent:
         system_message: SystemMessage,
         model: ChatOpenAI,
     ) -> None:
-        self.system_message = system_message
-        self.model = model
+        self._init_system_message = system_message
+        self._system_messages = [self._init_system_message]
+        self._chat_messages = []
+        self._model = model
         self.init_messages()
 
     def reset(self) -> None:
         self.init_messages()
-        return self.stored_messages
+        return self.build_complete_message_list()
 
     def init_messages(self) -> None:
-        self.stored_messages = [self.system_message]
+        self._system_messages = [self._init_system_message]
+        self._chat_messages = []
 
-    def update_messages(self, message: BaseMessage) -> List[BaseMessage]:
-        self.stored_messages.append(message)
-        return self.stored_messages
+    def add_chat_messages(self, message: BaseMessage) -> List[BaseMessage]:
+        self._chat_messages.append(message)
+        return self._chat_messages
 
-    def get_messages(self):
-        return self.stored_messages
+    def build_complete_message_list(self):
+        return self._system_messages + self._chat_messages
 
-    def set_directives(self, message: str, replace=False) -> None:
-        pass
+    def add_directives(self, message: str, replace=False) -> None:
+        director_msg = SystemMessage(content=message)
+        self.add_chat_messages(director_msg)
 
     def get_directives(self) -> str:
         pass
@@ -49,11 +52,10 @@ class CAMELAgent:
     ) -> AIMessage:
         messages = []
         if input_message != "":
-            messages = self.update_messages(input_message)
-        else:
-            messages = self.get_messages()
-        output_message = self.model(messages)
-        self.update_messages(output_message)
+            self.add_chat_messages(input_message)
+        messages = self.build_complete_message_list()
+        output_message = self._model(messages)
+        self.add_chat_messages(output_message)
 
         return output_message
 
